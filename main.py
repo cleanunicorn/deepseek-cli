@@ -18,6 +18,33 @@ client = OpenAI(
     # api_key=os.getenv("OPENROUTER_API_KEY"),
 )
 
+def get_available_models():
+    try:
+        models = client.models.list()
+        return [model.id for model in models]
+    except Exception as e:
+        print(f"Error fetching models: {e}")
+        return ["deepseek-reasoner"]  # Fallback to default model
+
+def select_model():
+    models = get_available_models()
+    print("\nAvailable models:")
+    for i, model in enumerate(models, 1):
+        print(f"{i}. {model}")
+    
+    while True:
+        try:
+            choice = int(input("\nSelect a model (enter the number): "))
+            if 1 <= choice <= len(models):
+                return models[choice - 1]
+            print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Please enter a valid number.")
+
+# Get user's model selection
+selected_model = select_model()
+print(f"\nSelected model: {selected_model}\n")
+
 # Initialize conversation history
 messages = [
     {"role": "system", "content": "You are a helpful assistant"}
@@ -62,7 +89,7 @@ try:
 
         # Get streaming response from API
         response = client.chat.completions.create(
-            model="deepseek-reasoner",
+            model=selected_model,  # Use the selected model instead of hardcoded one
             messages=messages,
             stream=True  # Enable streaming
         )
